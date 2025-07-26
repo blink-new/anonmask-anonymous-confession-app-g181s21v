@@ -11,6 +11,7 @@ import ConfessionCard from '../components/ConfessionCard';
 import FloatingActionButton from '../components/FloatingActionButton';
 import BottomNavigation from '../components/BottomNavigation';
 import CategoryFilter from '../components/CategoryFilter';
+import ConfessionOfTheDay from '../components/ConfessionOfTheDay';
 
 interface User {
   id: string;
@@ -149,11 +150,11 @@ export default function HomeScreen() {
   const handleTabPress = (tab: string) => {
     setActiveTab(tab);
     if (tab === 'search') {
-      // Navigate to search screen (to be implemented)
+      router.push('/search');
     } else if (tab === 'inbox') {
-      // Navigate to inbox screen (to be implemented)
+      router.push('/inbox');
     } else if (tab === 'profile') {
-      // Navigate to profile screen (to be implemented)
+      router.push('/settings');
     }
   };
 
@@ -229,11 +230,11 @@ export default function HomeScreen() {
               <Text className="text-white text-xl font-bold">AnonMask</Text>
             </View>
             
-            <View className="flex-row">
-              <TouchableOpacity className="mr-4">
-                <Ionicons name="notifications-outline" size={24} color="#ffffff80" />
+            <View className="flex-row items-center">
+              <TouchableOpacity onPress={() => router.push('/inbox')} className="mr-4">
+                <Ionicons name="mail-outline" size={24} color="#ffffff80" />
               </TouchableOpacity>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push('/settings')}>
                 <Ionicons name="settings-outline" size={24} color="#ffffff80" />
               </TouchableOpacity>
             </View>
@@ -288,6 +289,9 @@ export default function HomeScreen() {
             loadConfessions();
           }}
         />
+
+        {/* Confession of the Day */}
+        <ConfessionOfTheDay onReact={handleReaction} />
 
         {/* Confessions Feed */}
         <ScrollView

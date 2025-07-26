@@ -20,6 +20,9 @@ body {
   background: linear-gradient(135deg, #1e1e2f 0%, #2a2a3e 50%, #1e1e2f 100%);
   min-height: 100vh;
   font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
 }
 
 /* Glassmorphism utilities */
@@ -64,4 +67,51 @@ body {
 /* Smooth transitions */
 * {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+}
+
+/* Fix layout alignment */
+.container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* Ensure proper spacing */
+.space-y-2 > * + * {
+  margin-top: 8px;
+}
+
+.space-y-3 > * + * {
+  margin-top: 12px;
+}
+
+.space-y-4 > * + * {
+  margin-top: 16px;
+}
+
+/* Fix flex alignment issues */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Ensure proper text alignment */
+.text-center {
+  text-align: center;
+}
+
+/* Fix button alignment */
+.btn-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }

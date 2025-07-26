@@ -8,6 +8,7 @@ import { router } from 'expo-router';
 import * as Location from 'expo-location';
 import { blink } from '../lib/blink';
 import BubbleBackground from '../components/BubbleBackground';
+import AudioRecorder from '../components/AudioRecorder';
 
 interface User {
   id: string;
@@ -26,6 +27,9 @@ export default function CreateConfessionScreen() {
   const [useLocation, setUseLocation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [canPost, setCanPost] = useState(true);
+  const [showAudioRecorder, setShowAudioRecorder] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [audioDuration, setAudioDuration] = useState<number>(0);
 
   const categories = [
     { id: 'general', label: 'General', emoji: '💭' },
@@ -138,6 +142,8 @@ export default function CreateConfessionScreen() {
         anonymous_name: randomName,
         anonymous_avatar: randomAvatar,
         location: useLocation ? location : null,
+        audio_url: audioUrl,
+        voice_filter: audioUrl ? 'filtered' : null,
         sentiment_score: 0.0,
         is_featured: false,
         is_confession_of_day: false,
@@ -324,6 +330,47 @@ export default function CreateConfessionScreen() {
               )}
             </BlurView>
 
+            {/* Audio Recording */}
+            <BlurView intensity={15} tint="dark" className="glass-card p-4 mb-6">
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-white font-medium">Audio Confession</Text>
+                <TouchableOpacity
+                  onPress={() => setShowAudioRecorder(true)}
+                  disabled={!canPost}
+                  className="bg-accent/20 px-3 py-2 rounded-full"
+                >
+                  <View className="flex-row items-center">
+                    <Ionicons name="mic" size={16} color="#b497f3" />
+                    <Text className="text-accent text-sm font-medium ml-2">Record</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+              
+              {audioUrl ? (
+                <View className="bg-accent/10 p-3 rounded-xl">
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center">
+                      <Ionicons name="musical-notes" size={16} color="#b497f3" />
+                      <Text className="text-accent ml-2">Audio recorded ({Math.floor(audioDuration / 60)}:{(audioDuration % 60).toString().padStart(2, '0')})</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setAudioUrl(null);
+                        setAudioDuration(0);
+                      }}
+                      disabled={!canPost}
+                    >
+                      <Ionicons name="trash" size={16} color="#ef4444" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <Text className="text-white/60 text-sm">
+                  Add an anonymous audio confession with voice filter protection
+                </Text>
+              )}
+            </BlurView>
+
             {/* Location */}
             <BlurView intensity={15} tint="dark" className="glass-card p-4 mb-6">
               <View className="flex-row items-center justify-between mb-3">
@@ -388,6 +435,17 @@ export default function CreateConfessionScreen() {
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
+
+      {/* Audio Recorder Modal */}
+      {showAudioRecorder && (
+        <AudioRecorder
+          onAudioRecorded={(url, duration) => {
+            setAudioUrl(url);
+            setAudioDuration(duration);
+          }}
+          onClose={() => setShowAudioRecorder(false)}
+        />
+      )}
     </View>
   );
 }
