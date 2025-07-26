@@ -1,53 +1,57 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  SafeAreaView,
-  Alert,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { ArrowLeft, MapPin, Send, Clock } from 'lucide-react-native';
 import * as Location from 'expo-location';
-import blink from '@/lib/blink';
+import { blink } from '../lib/blink';
+import BubbleBackground from '../components/BubbleBackground';
 
-const ANONYMOUS_AVATARS = ['🎭', '👤', '🕶️', '🎪', '🎨', '🎯', '🎲', '🎸'];
-const ANONYMOUS_NAMES = [
-  'Anonymous Dreamer',
-  'Secret Keeper',
-  'Hidden Truth',
-  'Masked Soul',
-  'Silent Voice',
-  'Mystery Writer',
-  'Faceless Friend',
-  'Unknown Sage',
-];
+interface User {
+  id: string;
+  email: string;
+  display_name?: string;
+}
 
-export default function CreateConfession() {
+export default function CreateConfessionScreen() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const [content, setContent] = useState('');
-  const [location, setLocation] = useState<{
-    name: string;
-    latitude: number;
-    longitude: number;
-  } | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('general');
+  const [tags, setTags] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState('');
+  const [location, setLocation] = useState<string>('');
+  const [useLocation, setUseLocation] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [canPost, setCanPost] = useState(true);
-  const [user, setUser] = useState<any>(null);
-  const [anonymousName] = useState(
-    ANONYMOUS_NAMES[Math.floor(Math.random() * ANONYMOUS_NAMES.length)]
-  );
-  const [anonymousAvatar] = useState(
-    ANONYMOUS_AVATARS[Math.floor(Math.random() * ANONYMOUS_AVATARS.length)]
-  );
+
+  const categories = [
+    { id: 'general', label: 'General', emoji: '💭' },
+    { id: 'love', label: 'Love', emoji: '💕' },
+    { id: 'regret', label: 'Regret', emoji: '😔' },
+    { id: 'mental-health', label: 'Mental Health', emoji: '🧠' },
+    { id: 'family', label: 'Family', emoji: '👨‍👩‍👧‍👦' },
+    { id: 'work', label: 'Work', emoji: '💼' },
+    { id: 'college', label: 'College', emoji: '🎓' },
+    { id: 'fun', label: 'Fun', emoji: '🎉' },
+    { id: 'relationships', label: 'Relationships', emoji: '💑' },
+  ];
+
+  const anonymousNames = [
+    'Anonymous Dreamer', 'Secret Keeper', 'Hidden Truth', 'Masked Soul',
+    'Silent Voice', 'Unknown Heart', 'Faceless Friend', 'Mystery Mind',
+    'Invisible Spirit', 'Nameless Wanderer', 'Phantom Thoughts', 'Shadow Walker'
+  ];
+
+  const anonymousAvatars = ['🎭', '👤', '🌙', '⭐', '🔮', '💫', '🌟', '✨', '🎪', '🎨', '🎯', '🎲'];
 
   useEffect(() => {
     const unsubscribe = blink.auth.onAuthStateChanged((state) => {
       setUser(state.user);
-      if (state.user && !state.isLoading) {
+      setLoading(state.isLoading);
+      if (state.user) {
         checkDailyLimit();
       }
     });
@@ -59,17 +63,14 @@ export default function CreateConfession() {
 
     try {
       const today = new Date().toISOString().split('T')[0];
-      const todaysPosts = await (blink.db as any).user_posts.list({
-        where: {
-          AND: [
-            { user_id: user.id },
-            { post_date: today }
-          ]
-        },
-        limit: 1
+      const todayConfessions = await blink.db.confessions.list({
+        where: { 
+          user_id: user.id,
+          created_at: { gte: `${today}T00:00:00.000Z` }
+        }
       });
 
-      setCanPost(todaysPosts.length === 0);
+      setCanPost(todayConfessions.length === 0);
     } catch (error) {
       console.error('Error checking daily limit:', error);
     }
@@ -79,210 +80,314 @@ export default function CreateConfession() {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission denied', 'Location permission is needed to tag your confession.');
+        Alert.alert('Permission denied', 'Location permission is required to add location to your confession.');
         return;
       }
 
-      const currentLocation = await Location.getCurrentPositionAsync({});
+      const location = await Location.getCurrentPositionAsync({});
       const reverseGeocode = await Location.reverseGeocodeAsync({
-        latitude: currentLocation.coords.latitude,
-        longitude: currentLocation.coords.longitude,
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
       });
 
       if (reverseGeocode.length > 0) {
         const address = reverseGeocode[0];
-        const locationName = address.city || address.district || address.region || 'Unknown Location';
-        
-        setLocation({
-          name: locationName,
-          latitude: currentLocation.coords.latitude,
-          longitude: currentLocation.coords.longitude,
-        });
+        const locationString = `${address.city}, ${address.region}`;
+        setLocation(locationString);
+        setUseLocation(true);
       }
     } catch (error) {
       console.error('Error getting location:', error);
-      Alert.alert('Error', 'Could not get your location. Please try again.');
+      Alert.alert('Error', 'Failed to get your location.');
     }
+  };
+
+  const addTag = () => {
+    if (newTag.trim() && !tags.includes(newTag.trim()) && tags.length < 5) {
+      setTags([...tags, newTag.trim()]);
+      setNewTag('');
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setTags(tags.filter(tag => tag !== tagToRemove));
   };
 
   const submitConfession = async () => {
     if (!user || !content.trim()) return;
 
     if (!canPost) {
-      Alert.alert('Daily Limit Reached', 'You can only post one confession per day. Come back tomorrow!');
+      Alert.alert('Daily Limit Reached', 'You can only post one confession per day. Come back tomorrow! 🌅');
       return;
     }
 
-    setLoading(true);
+    setIsSubmitting(true);
 
     try {
-      const today = new Date().toISOString().split('T')[0];
+      // Generate random anonymous identity
+      const randomName = anonymousNames[Math.floor(Math.random() * anonymousNames.length)];
+      const randomAvatar = anonymousAvatars[Math.floor(Math.random() * anonymousAvatars.length)];
 
-      // Create the confession
-      const confession = await (blink.db as any).confessions.create({
+      // Create confession
+      await blink.db.confessions.create({
+        id: `confession_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         user_id: user.id,
         content: content.trim(),
-        location_name: location?.name || null,
-        latitude: location?.latitude || null,
-        longitude: location?.longitude || null,
-        anonymous_name: anonymousName,
-        anonymous_avatar: anonymousAvatar,
-        hearts_count: 0,
-        comments_count: 0,
-      });
-
-      // Record the daily post
-      await (blink.db as any).user_posts.create({
-        user_id: user.id,
-        post_date: today,
-        confession_id: confession.id,
+        category: selectedCategory,
+        tags: tags.length > 0 ? JSON.stringify(tags) : null,
+        anonymous_name: randomName,
+        anonymous_avatar: randomAvatar,
+        location: useLocation ? location : null,
+        sentiment_score: 0.0,
+        is_featured: false,
+        is_confession_of_day: false,
+        moderation_status: 'approved' // Auto-approve for now
       });
 
       Alert.alert(
-        'Confession Shared',
-        'Your anonymous confession has been shared with the world.',
+        'Confession Shared! 🎭',
+        'Your anonymous confession has been shared with the community.',
         [{ text: 'OK', onPress: () => router.back() }]
       );
     } catch (error) {
-      console.error('Error creating confession:', error);
-      Alert.alert('Error', 'Could not share your confession. Please try again.');
+      console.error('Error submitting confession:', error);
+      Alert.alert('Error', 'Failed to submit your confession. Please try again.');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  if (!user) {
+  if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-background">
-        <View className="flex-1 justify-center items-center">
-          <Text className="text-text-secondary">Loading...</Text>
-        </View>
-      </SafeAreaView>
+      <View className="flex-1 bg-primary">
+        <BubbleBackground />
+        <SafeAreaView className="flex-1 items-center justify-center">
+          <BlurView intensity={20} tint="dark" className="p-6 rounded-2xl glass-card">
+            <Text className="text-white text-lg">Loading...</Text>
+          </BlurView>
+        </SafeAreaView>
+      </View>
     );
   }
 
-  if (!canPost) {
+  if (!user) {
     return (
-      <SafeAreaView className="flex-1 bg-background">
-        <View className="flex-row items-center px-6 py-4 border-b border-gray-800">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
-            <ArrowLeft size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-          <Text className="text-text-primary text-lg font-inter-medium">Daily Limit</Text>
-        </View>
-
-        <View className="flex-1 justify-center items-center px-6">
-          <Text className="text-6xl mb-6">⏰</Text>
-          <Text className="text-text-primary text-xl font-inter-medium mb-4 text-center">
-            You've already shared today
-          </Text>
-          <Text className="text-text-secondary text-center leading-6 mb-8">
-            To encourage thoughtful confessions, you can only share one per day. Come back tomorrow to share another anonymous truth.
-          </Text>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="bg-primary px-8 py-3 rounded-full"
-          >
-            <Text className="text-white font-inter-medium">Back to Feed</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+      <View className="flex-1 bg-primary">
+        <BubbleBackground />
+        <SafeAreaView className="flex-1 items-center justify-center">
+          <BlurView intensity={20} tint="dark" className="p-6 rounded-2xl glass-card">
+            <Text className="text-white text-lg">Please sign in to create a confession</Text>
+          </BlurView>
+        </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1"
-      >
+    <View className="flex-1 bg-primary">
+      <BubbleBackground />
+      
+      <SafeAreaView className="flex-1">
         {/* Header */}
-        <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-800">
-          <TouchableOpacity onPress={() => router.back()}>
-            <ArrowLeft size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-          <Text className="text-text-primary text-lg font-inter-medium">New Confession</Text>
-          <TouchableOpacity
-            onPress={submitConfession}
-            disabled={!content.trim() || loading}
-            className={`px-4 py-2 rounded-full ${
-              content.trim() && !loading ? 'bg-primary' : 'bg-gray-700'
-            }`}
-          >
-            {loading ? (
-              <Text className="text-white font-inter">Sharing...</Text>
-            ) : (
-              <View className="flex-row items-center">
-                <Send size={16} color="#FFFFFF" />
-                <Text className="text-white font-inter ml-2">Share</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView className="flex-1">
-          {/* Anonymous Identity */}
-          <View className="px-6 py-4 border-b border-gray-800">
-            <Text className="text-text-secondary text-sm mb-2">Posting as</Text>
-            <View className="flex-row items-center">
-              <Text className="text-2xl mr-3">{anonymousAvatar}</Text>
-              <Text className="text-text-primary font-inter-medium">{anonymousName}</Text>
-            </View>
+        <BlurView intensity={20} tint="dark" className="glass border-b border-white/10">
+          <View className="flex-row items-center justify-between px-4 py-3">
+            <TouchableOpacity onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={24} color="white" />
+            </TouchableOpacity>
+            <Text className="text-white text-lg font-semibold">Share Anonymously</Text>
+            <View className="w-6" />
           </View>
+        </BlurView>
 
-          {/* Content Input */}
-          <View className="px-6 py-6">
-            <TextInput
-              value={content}
-              onChangeText={setContent}
-              placeholder="Share your anonymous confession..."
-              placeholderTextColor="#A1A1AA"
-              multiline
-              className="text-text-primary text-base leading-6 min-h-[200px]"
-              style={{ textAlignVertical: 'top' }}
-              maxLength={500}
-            />
-            <Text className="text-text-secondary text-sm text-right mt-2">
-              {content.length}/500
-            </Text>
-          </View>
-
-          {/* Location Section */}
-          <View className="px-6 py-4 border-t border-gray-800">
-            <Text className="text-text-secondary text-sm mb-3">Location (optional)</Text>
-            {location ? (
-              <View className="flex-row items-center justify-between bg-card p-3 rounded-xl">
-                <View className="flex-row items-center flex-1">
-                  <MapPin size={16} color="#F59E0B" />
-                  <Text className="text-text-primary ml-2 flex-1">{location.name}</Text>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          className="flex-1"
+        >
+          <ScrollView className="flex-1 px-4 py-6" showsVerticalScrollIndicator={false}>
+            {/* Daily Limit Warning */}
+            {!canPost && (
+              <BlurView intensity={15} tint="dark" className="glass-card p-4 mb-6 border border-yellow-500/30">
+                <View className="flex-row items-center">
+                  <Ionicons name="time-outline" size={20} color="#f59e0b" />
+                  <Text className="text-yellow-400 font-medium ml-2">Daily Limit Reached</Text>
                 </View>
-                <TouchableOpacity onPress={() => setLocation(null)}>
-                  <Text className="text-accent">Remove</Text>
+                <Text className="text-white/70 text-sm mt-2">
+                  You can share one confession per day. Come back tomorrow for another anonymous share! 🌅
+                </Text>
+              </BlurView>
+            )}
+
+            {/* Privacy Notice */}
+            <BlurView intensity={15} tint="dark" className="glass-card p-4 mb-6">
+              <View className="flex-row items-center mb-2">
+                <Ionicons name="shield-checkmark" size={20} color="#b497f3" />
+                <Text className="text-accent font-medium ml-2">100% Anonymous</Text>
+              </View>
+              <Text className="text-white/70 text-sm">
+                Your identity is never revealed. Even we can't trace it back to you. Share freely and honestly. 🎭
+              </Text>
+            </BlurView>
+
+            {/* Content Input */}
+            <BlurView intensity={15} tint="dark" className="glass-card p-4 mb-6">
+              <Text className="text-white font-medium mb-3">What's on your mind?</Text>
+              <TextInput
+                value={content}
+                onChangeText={setContent}
+                placeholder="Share your thoughts, secrets, or feelings anonymously..."
+                placeholderTextColor="#ffffff60"
+                multiline
+                numberOfLines={6}
+                className="text-white text-base leading-6 min-h-[120px]"
+                style={{ textAlignVertical: 'top' }}
+                maxLength={500}
+                editable={canPost}
+              />
+              <Text className="text-white/40 text-xs mt-2 text-right">
+                {content.length}/500 characters
+              </Text>
+            </BlurView>
+
+            {/* Category Selection */}
+            <BlurView intensity={15} tint="dark" className="glass-card p-4 mb-6">
+              <Text className="text-white font-medium mb-3">Category</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View className="flex-row">
+                  {categories.map((category) => (
+                    <TouchableOpacity
+                      key={category.id}
+                      onPress={() => setSelectedCategory(category.id)}
+                      disabled={!canPost}
+                      className="mr-3"
+                    >
+                      <BlurView
+                        intensity={10}
+                        tint="dark"
+                        className={`px-4 py-2 rounded-full ${
+                          selectedCategory === category.id ? 'glass-button' : 'glass'
+                        }`}
+                      >
+                        <View className="flex-row items-center">
+                          <Text className="mr-2">{category.emoji}</Text>
+                          <Text
+                            className={`text-sm font-medium ${
+                              selectedCategory === category.id ? 'text-accent' : 'text-white/80'
+                            }`}
+                          >
+                            {category.label}
+                          </Text>
+                        </View>
+                      </BlurView>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
+            </BlurView>
+
+            {/* Tags */}
+            <BlurView intensity={15} tint="dark" className="glass-card p-4 mb-6">
+              <Text className="text-white font-medium mb-3">Tags (Optional)</Text>
+              
+              {/* Existing Tags */}
+              {tags.length > 0 && (
+                <View className="flex-row flex-wrap mb-3">
+                  {tags.map((tag, index) => (
+                    <View key={index} className="bg-accent/20 px-3 py-1 rounded-full mr-2 mb-2 flex-row items-center">
+                      <Text className="text-accent text-sm">#{tag}</Text>
+                      <TouchableOpacity onPress={() => removeTag(tag)} className="ml-2">
+                        <Ionicons name="close" size={14} color="#b497f3" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* Add Tag Input */}
+              {tags.length < 5 && canPost && (
+                <View className="flex-row">
+                  <TextInput
+                    value={newTag}
+                    onChangeText={setNewTag}
+                    placeholder="Add a tag..."
+                    placeholderTextColor="#ffffff60"
+                    className="flex-1 text-white bg-white/5 px-3 py-2 rounded-l-xl"
+                    maxLength={20}
+                    onSubmitEditing={addTag}
+                  />
+                  <TouchableOpacity
+                    onPress={addTag}
+                    className="bg-accent/20 px-4 py-2 rounded-r-xl items-center justify-center"
+                  >
+                    <Ionicons name="add" size={20} color="#b497f3" />
+                  </TouchableOpacity>
+                </View>
+              )}
+            </BlurView>
+
+            {/* Location */}
+            <BlurView intensity={15} tint="dark" className="glass-card p-4 mb-6">
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-white font-medium">Add Location</Text>
+                <TouchableOpacity
+                  onPress={() => setUseLocation(!useLocation)}
+                  disabled={!canPost}
+                >
+                  <View className={`w-12 h-6 rounded-full ${useLocation ? 'bg-accent' : 'bg-white/20'} items-center justify-center`}>
+                    <View className={`w-5 h-5 rounded-full bg-white transform ${useLocation ? 'translate-x-3' : '-translate-x-3'}`} />
+                  </View>
                 </TouchableOpacity>
               </View>
-            ) : (
-              <TouchableOpacity
-                onPress={requestLocation}
-                className="flex-row items-center justify-center bg-card p-3 rounded-xl"
-              >
-                <MapPin size={16} color="#A1A1AA" />
-                <Text className="text-text-secondary ml-2">Add location</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+              
+              {useLocation && (
+                <View>
+                  {location ? (
+                    <View className="flex-row items-center">
+                      <Ionicons name="location" size={16} color="#b497f3" />
+                      <Text className="text-accent ml-2">{location}</Text>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      onPress={requestLocation}
+                      disabled={!canPost}
+                      className="flex-row items-center"
+                    >
+                      <Ionicons name="location-outline" size={16} color="#ffffff80" />
+                      <Text className="text-white/80 ml-2">Tap to get current location</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
+            </BlurView>
+          </ScrollView>
 
-          {/* Daily Limit Info */}
-          <View className="px-6 py-4 bg-card/30 mx-6 rounded-xl mt-4">
-            <View className="flex-row items-center mb-2">
-              <Clock size={16} color="#F59E0B" />
-              <Text className="text-accent font-inter-medium ml-2">Daily Limit</Text>
-            </View>
-            <Text className="text-text-secondary text-sm">
-              You can share one confession per day to encourage thoughtful, meaningful posts.
-            </Text>
+          {/* Submit Button */}
+          <View className="px-4 pb-6">
+            <TouchableOpacity
+              onPress={submitConfession}
+              disabled={!content.trim() || isSubmitting || !canPost}
+              className="w-full"
+            >
+              <LinearGradient
+                colors={canPost && content.trim() ? ['#b497f3', '#8b5cf6'] : ['#ffffff20', '#ffffff10']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                className="py-4 rounded-xl items-center"
+              >
+                <View className="flex-row items-center">
+                  {isSubmitting ? (
+                    <Ionicons name="hourglass-outline" size={20} color="white" />
+                  ) : (
+                    <Ionicons name="paper-plane" size={20} color="white" />
+                  )}
+                  <Text className="text-white font-semibold ml-2">
+                    {isSubmitting ? 'Sharing...' : canPost ? 'Share Anonymously' : 'Daily Limit Reached'}
+                  </Text>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
