@@ -10,6 +10,7 @@ interface CategoryFilterProps {
 const CategoryFilter: React.FC<CategoryFilterProps> = ({ selectedCategory, onCategorySelect }) => {
   const categories = [
     { id: 'all', label: 'All', emoji: '🌟' },
+    { id: 'general', label: 'General', emoji: '💭' },
     { id: 'love', label: 'Love', emoji: '💕' },
     { id: 'regret', label: 'Regret', emoji: '😔' },
     { id: 'mental-health', label: 'Mental Health', emoji: '🧠' },
@@ -21,39 +22,35 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({ selectedCategory, onCat
   ];
 
   return (
-    <View className="mb-4">
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 16 }}
-        className="py-2"
-      >
-        {categories.map((category) => (
-          <TouchableOpacity
-            key={category.id}
-            onPress={() => onCategorySelect(category.id)}
-            className="mr-3"
-          >
-            <BlurView
-              intensity={15}
-              tint="dark"
-              className={`px-4 py-2 rounded-full ${
-                selectedCategory === category.id ? 'glass-button' : 'glass'
-              }`}
+    <View className="px-6 pb-4">
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <View className="flex-row space-x-3">
+          {categories.map((category) => (
+            <TouchableOpacity
+              key={category.id}
+              onPress={() => onCategorySelect(category.id)}
             >
-              <View className="flex-row items-center">
-                <Text className="mr-2">{category.emoji}</Text>
-                <Text
-                  className={`text-sm font-medium ${
-                    selectedCategory === category.id ? 'text-accent' : 'text-white/80'
-                  }`}
-                >
-                  {category.label}
-                </Text>
-              </View>
-            </BlurView>
-          </TouchableOpacity>
-        ))}
+              <BlurView
+                intensity={15}
+                tint="dark"
+                className={`px-4 py-3 rounded-full ${
+                  selectedCategory === category.id ? 'glass-button' : 'glass'
+                }`}
+              >
+                <View className="flex-row items-center">
+                  <Text className="mr-2 text-base">{category.emoji}</Text>
+                  <Text
+                    className={`text-sm font-medium ${
+                      selectedCategory === category.id ? 'text-accent' : 'text-white/80'
+                    }`}
+                  >
+                    {category.label}
+                  </Text>
+                </View>
+              </BlurView>
+            </TouchableOpacity>
+          ))}
+        </View>
       </ScrollView>
     </View>
   );

@@ -128,11 +128,9 @@ export default function CreateConfessionScreen() {
     setIsSubmitting(true);
 
     try {
-      // Generate random anonymous identity
       const randomName = anonymousNames[Math.floor(Math.random() * anonymousNames.length)];
       const randomAvatar = anonymousAvatars[Math.floor(Math.random() * anonymousAvatars.length)];
 
-      // Create confession
       await blink.db.confessions.create({
         id: `confession_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         user_id: user.id,
@@ -147,7 +145,7 @@ export default function CreateConfessionScreen() {
         sentiment_score: 0.0,
         is_featured: false,
         is_confession_of_day: false,
-        moderation_status: 'approved' // Auto-approve for now
+        moderation_status: 'approved'
       });
 
       Alert.alert(
@@ -167,10 +165,17 @@ export default function CreateConfessionScreen() {
     return (
       <View className="flex-1 bg-primary">
         <BubbleBackground />
-        <SafeAreaView className="flex-1 items-center justify-center">
-          <BlurView intensity={20} tint="dark" className="p-6 rounded-2xl glass-card">
-            <Text className="text-white text-lg">Loading...</Text>
-          </BlurView>
+        <SafeAreaView className="flex-1">
+          <View className="flex-1 items-center justify-center px-6">
+            <BlurView intensity={20} tint="dark" className="glass-card p-8 rounded-3xl">
+              <View className="items-center">
+                <View className="w-16 h-16 rounded-full bg-accent/20 items-center justify-center mb-4">
+                  <Text className="text-3xl">🎭</Text>
+                </View>
+                <Text className="text-white text-lg font-medium">Loading...</Text>
+              </View>
+            </BlurView>
+          </View>
         </SafeAreaView>
       </View>
     );
@@ -180,10 +185,14 @@ export default function CreateConfessionScreen() {
     return (
       <View className="flex-1 bg-primary">
         <BubbleBackground />
-        <SafeAreaView className="flex-1 items-center justify-center">
-          <BlurView intensity={20} tint="dark" className="p-6 rounded-2xl glass-card">
-            <Text className="text-white text-lg">Please sign in to create a confession</Text>
-          </BlurView>
+        <SafeAreaView className="flex-1">
+          <View className="flex-1 items-center justify-center px-6">
+            <BlurView intensity={20} tint="dark" className="glass-card p-8 rounded-3xl">
+              <View className="items-center">
+                <Text className="text-white text-lg font-medium">Please sign in to create a confession</Text>
+              </View>
+            </BlurView>
+          </View>
         </SafeAreaView>
       </View>
     );
@@ -195,220 +204,243 @@ export default function CreateConfessionScreen() {
       
       <SafeAreaView className="flex-1">
         {/* Header */}
-        <BlurView intensity={20} tint="dark" className="glass border-b border-white/10">
-          <View className="flex-row items-center justify-between px-4 py-3">
-            <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={24} color="white" />
-            </TouchableOpacity>
-            <Text className="text-white text-lg font-semibold">Share Anonymously</Text>
-            <View className="w-6" />
-          </View>
-        </BlurView>
+        <View className="border-b border-white/10">
+          <BlurView intensity={20} tint="dark" className="glass">
+            <View className="flex-row items-center justify-between px-6 py-4">
+              <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 items-center justify-center">
+                <Ionicons name="arrow-back" size={24} color="white" />
+              </TouchableOpacity>
+              <Text className="text-white text-lg font-semibold">Share Anonymously</Text>
+              <View className="w-10" />
+            </View>
+          </BlurView>
+        </View>
 
         <KeyboardAvoidingView 
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           className="flex-1"
         >
-          <ScrollView className="flex-1 px-4 py-6" showsVerticalScrollIndicator={false}>
-            {/* Daily Limit Warning */}
-            {!canPost && (
-              <BlurView intensity={15} tint="dark" className="glass-card p-4 mb-6 border border-yellow-500/30">
-                <View className="flex-row items-center">
-                  <Ionicons name="time-outline" size={20} color="#f59e0b" />
-                  <Text className="text-yellow-400 font-medium ml-2">Daily Limit Reached</Text>
+          <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+            <View className="px-6 py-6 space-y-6">
+              {/* Daily Limit Warning */}
+              {!canPost && (
+                <BlurView intensity={15} tint="dark" className="glass-card p-5 border border-yellow-500/30 rounded-3xl">
+                  <View className="space-y-3">
+                    <View className="flex-row items-center">
+                      <Ionicons name="time-outline" size={20} color="#f59e0b" />
+                      <Text className="text-yellow-400 font-semibold ml-3">Daily Limit Reached</Text>
+                    </View>
+                    <Text className="text-white/70 text-sm leading-6">
+                      You can share one confession per day. Come back tomorrow for another anonymous share! 🌅
+                    </Text>
+                  </View>
+                </BlurView>
+              )}
+
+              {/* Privacy Notice */}
+              <BlurView intensity={15} tint="dark" className="glass-card p-5 rounded-3xl">
+                <View className="space-y-3">
+                  <View className="flex-row items-center">
+                    <Ionicons name="shield-checkmark" size={20} color="#b497f3" />
+                    <Text className="text-accent font-semibold ml-3">100% Anonymous</Text>
+                  </View>
+                  <Text className="text-white/70 text-sm leading-6">
+                    Your identity is never revealed. Even we can't trace it back to you. Share freely and honestly. 🎭
+                  </Text>
                 </View>
-                <Text className="text-white/70 text-sm mt-2">
-                  You can share one confession per day. Come back tomorrow for another anonymous share! 🌅
-                </Text>
               </BlurView>
-            )}
 
-            {/* Privacy Notice */}
-            <BlurView intensity={15} tint="dark" className="glass-card p-4 mb-6">
-              <View className="flex-row items-center mb-2">
-                <Ionicons name="shield-checkmark" size={20} color="#b497f3" />
-                <Text className="text-accent font-medium ml-2">100% Anonymous</Text>
-              </View>
-              <Text className="text-white/70 text-sm">
-                Your identity is never revealed. Even we can't trace it back to you. Share freely and honestly. 🎭
-              </Text>
-            </BlurView>
+              {/* Content Input */}
+              <BlurView intensity={15} tint="dark" className="glass-card p-5 rounded-3xl">
+                <View className="space-y-4">
+                  <Text className="text-white font-semibold text-base">What's on your mind?</Text>
+                  <View className="bg-white/5 rounded-2xl p-4">
+                    <TextInput
+                      value={content}
+                      onChangeText={setContent}
+                      placeholder="Share your thoughts, secrets, or feelings anonymously..."
+                      placeholderTextColor="#ffffff60"
+                      multiline
+                      numberOfLines={6}
+                      className="text-white text-base leading-7 min-h-[120px]"
+                      style={{ textAlignVertical: 'top' }}
+                      maxLength={500}
+                      editable={canPost}
+                    />
+                  </View>
+                  <Text className="text-white/40 text-xs text-right">
+                    {content.length}/500 characters
+                  </Text>
+                </View>
+              </BlurView>
 
-            {/* Content Input */}
-            <BlurView intensity={15} tint="dark" className="glass-card p-4 mb-6">
-              <Text className="text-white font-medium mb-3">What's on your mind?</Text>
-              <TextInput
-                value={content}
-                onChangeText={setContent}
-                placeholder="Share your thoughts, secrets, or feelings anonymously..."
-                placeholderTextColor="#ffffff60"
-                multiline
-                numberOfLines={6}
-                className="text-white text-base leading-6 min-h-[120px]"
-                style={{ textAlignVertical: 'top' }}
-                maxLength={500}
-                editable={canPost}
-              />
-              <Text className="text-white/40 text-xs mt-2 text-right">
-                {content.length}/500 characters
-              </Text>
-            </BlurView>
-
-            {/* Category Selection */}
-            <BlurView intensity={15} tint="dark" className="glass-card p-4 mb-6">
-              <Text className="text-white font-medium mb-3">Category</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View className="flex-row">
-                  {categories.map((category) => (
-                    <TouchableOpacity
-                      key={category.id}
-                      onPress={() => setSelectedCategory(category.id)}
-                      disabled={!canPost}
-                      className="mr-3"
-                    >
-                      <BlurView
-                        intensity={10}
-                        tint="dark"
-                        className={`px-4 py-2 rounded-full ${
-                          selectedCategory === category.id ? 'glass-button' : 'glass'
-                        }`}
-                      >
-                        <View className="flex-row items-center">
-                          <Text className="mr-2">{category.emoji}</Text>
-                          <Text
-                            className={`text-sm font-medium ${
-                              selectedCategory === category.id ? 'text-accent' : 'text-white/80'
+              {/* Category Selection */}
+              <BlurView intensity={15} tint="dark" className="glass-card p-5 rounded-3xl">
+                <View className="space-y-4">
+                  <Text className="text-white font-semibold text-base">Category</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    <View className="flex-row space-x-3">
+                      {categories.map((category) => (
+                        <TouchableOpacity
+                          key={category.id}
+                          onPress={() => setSelectedCategory(category.id)}
+                          disabled={!canPost}
+                        >
+                          <BlurView
+                            intensity={10}
+                            tint="dark"
+                            className={`px-4 py-3 rounded-full ${
+                              selectedCategory === category.id ? 'glass-button' : 'glass'
                             }`}
                           >
-                            {category.label}
-                          </Text>
-                        </View>
-                      </BlurView>
-                    </TouchableOpacity>
-                  ))}
+                            <View className="flex-row items-center">
+                              <Text className="mr-2 text-base">{category.emoji}</Text>
+                              <Text
+                                className={`text-sm font-medium ${
+                                  selectedCategory === category.id ? 'text-accent' : 'text-white/80'
+                                }`}
+                              >
+                                {category.label}
+                              </Text>
+                            </View>
+                          </BlurView>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </ScrollView>
                 </View>
-              </ScrollView>
-            </BlurView>
+              </BlurView>
 
-            {/* Tags */}
-            <BlurView intensity={15} tint="dark" className="glass-card p-4 mb-6">
-              <Text className="text-white font-medium mb-3">Tags (Optional)</Text>
-              
-              {/* Existing Tags */}
-              {tags.length > 0 && (
-                <View className="flex-row flex-wrap mb-3">
-                  {tags.map((tag, index) => (
-                    <View key={index} className="bg-accent/20 px-3 py-1 rounded-full mr-2 mb-2 flex-row items-center">
-                      <Text className="text-accent text-sm">#{tag}</Text>
-                      <TouchableOpacity onPress={() => removeTag(tag)} className="ml-2">
-                        <Ionicons name="close" size={14} color="#b497f3" />
+              {/* Tags */}
+              <BlurView intensity={15} tint="dark" className="glass-card p-5 rounded-3xl">
+                <View className="space-y-4">
+                  <Text className="text-white font-semibold text-base">Tags (Optional)</Text>
+                  
+                  {/* Existing Tags */}
+                  {tags.length > 0 && (
+                    <View className="flex-row flex-wrap">
+                      {tags.map((tag, index) => (
+                        <View key={index} className="bg-accent/20 px-3 py-2 rounded-full mr-2 mb-2 flex-row items-center">
+                          <Text className="text-accent text-sm font-medium">#{tag}</Text>
+                          <TouchableOpacity onPress={() => removeTag(tag)} className="ml-2">
+                            <Ionicons name="close" size={16} color="#b497f3" />
+                          </TouchableOpacity>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+
+                  {/* Add Tag Input */}
+                  {tags.length < 5 && canPost && (
+                    <View className="flex-row">
+                      <View className="flex-1 bg-white/5 rounded-l-2xl">
+                        <TextInput
+                          value={newTag}
+                          onChangeText={setNewTag}
+                          placeholder="Add a tag..."
+                          placeholderTextColor="#ffffff60"
+                          className="text-white px-4 py-3"
+                          maxLength={20}
+                          onSubmitEditing={addTag}
+                        />
+                      </View>
+                      <TouchableOpacity
+                        onPress={addTag}
+                        className="bg-accent/20 px-4 py-3 rounded-r-2xl items-center justify-center"
+                      >
+                        <Ionicons name="add" size={20} color="#b497f3" />
                       </TouchableOpacity>
                     </View>
-                  ))}
-                </View>
-              )}
-
-              {/* Add Tag Input */}
-              {tags.length < 5 && canPost && (
-                <View className="flex-row">
-                  <TextInput
-                    value={newTag}
-                    onChangeText={setNewTag}
-                    placeholder="Add a tag..."
-                    placeholderTextColor="#ffffff60"
-                    className="flex-1 text-white bg-white/5 px-3 py-2 rounded-l-xl"
-                    maxLength={20}
-                    onSubmitEditing={addTag}
-                  />
-                  <TouchableOpacity
-                    onPress={addTag}
-                    className="bg-accent/20 px-4 py-2 rounded-r-xl items-center justify-center"
-                  >
-                    <Ionicons name="add" size={20} color="#b497f3" />
-                  </TouchableOpacity>
-                </View>
-              )}
-            </BlurView>
-
-            {/* Audio Recording */}
-            <BlurView intensity={15} tint="dark" className="glass-card p-4 mb-6">
-              <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-white font-medium">Audio Confession</Text>
-                <TouchableOpacity
-                  onPress={() => setShowAudioRecorder(true)}
-                  disabled={!canPost}
-                  className="bg-accent/20 px-3 py-2 rounded-full"
-                >
-                  <View className="flex-row items-center">
-                    <Ionicons name="mic" size={16} color="#b497f3" />
-                    <Text className="text-accent text-sm font-medium ml-2">Record</Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-              
-              {audioUrl ? (
-                <View className="bg-accent/10 p-3 rounded-xl">
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-row items-center">
-                      <Ionicons name="musical-notes" size={16} color="#b497f3" />
-                      <Text className="text-accent ml-2">Audio recorded ({Math.floor(audioDuration / 60)}:{(audioDuration % 60).toString().padStart(2, '0')})</Text>
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => {
-                        setAudioUrl(null);
-                        setAudioDuration(0);
-                      }}
-                      disabled={!canPost}
-                    >
-                      <Ionicons name="trash" size={16} color="#ef4444" />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ) : (
-                <Text className="text-white/60 text-sm">
-                  Add an anonymous audio confession with voice filter protection
-                </Text>
-              )}
-            </BlurView>
-
-            {/* Location */}
-            <BlurView intensity={15} tint="dark" className="glass-card p-4 mb-6">
-              <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-white font-medium">Add Location</Text>
-                <TouchableOpacity
-                  onPress={() => setUseLocation(!useLocation)}
-                  disabled={!canPost}
-                >
-                  <View className={`w-12 h-6 rounded-full ${useLocation ? 'bg-accent' : 'bg-white/20'} items-center justify-center`}>
-                    <View className={`w-5 h-5 rounded-full bg-white transform ${useLocation ? 'translate-x-3' : '-translate-x-3'}`} />
-                  </View>
-                </TouchableOpacity>
-              </View>
-              
-              {useLocation && (
-                <View>
-                  {location ? (
-                    <View className="flex-row items-center">
-                      <Ionicons name="location" size={16} color="#b497f3" />
-                      <Text className="text-accent ml-2">{location}</Text>
-                    </View>
-                  ) : (
-                    <TouchableOpacity
-                      onPress={requestLocation}
-                      disabled={!canPost}
-                      className="flex-row items-center"
-                    >
-                      <Ionicons name="location-outline" size={16} color="#ffffff80" />
-                      <Text className="text-white/80 ml-2">Tap to get current location</Text>
-                    </TouchableOpacity>
                   )}
                 </View>
-              )}
-            </BlurView>
+              </BlurView>
+
+              {/* Audio Recording */}
+              <BlurView intensity={15} tint="dark" className="glass-card p-5 rounded-3xl">
+                <View className="space-y-4">
+                  <View className="flex-row items-center justify-between">
+                    <Text className="text-white font-semibold text-base">Audio Confession</Text>
+                    <TouchableOpacity
+                      onPress={() => setShowAudioRecorder(true)}
+                      disabled={!canPost}
+                      className="bg-accent/20 px-4 py-2 rounded-full"
+                    >
+                      <View className="flex-row items-center">
+                        <Ionicons name="mic" size={16} color="#b497f3" />
+                        <Text className="text-accent text-sm font-semibold ml-2">Record</Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                  
+                  {audioUrl ? (
+                    <View className="bg-accent/10 p-4 rounded-2xl">
+                      <View className="flex-row items-center justify-between">
+                        <View className="flex-row items-center">
+                          <Ionicons name="musical-notes" size={18} color="#b497f3" />
+                          <Text className="text-accent ml-3 font-medium">
+                            Audio recorded ({Math.floor(audioDuration / 60)}:{(audioDuration % 60).toString().padStart(2, '0')})
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          onPress={() => {
+                            setAudioUrl(null);
+                            setAudioDuration(0);
+                          }}
+                          disabled={!canPost}
+                          className="w-8 h-8 items-center justify-center"
+                        >
+                          <Ionicons name="trash" size={18} color="#ef4444" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ) : (
+                    <Text className="text-white/60 text-sm leading-6">
+                      Add an anonymous audio confession with voice filter protection
+                    </Text>
+                  )}
+                </View>
+              </BlurView>
+
+              {/* Location */}
+              <BlurView intensity={15} tint="dark" className="glass-card p-5 rounded-3xl">
+                <View className="space-y-4">
+                  <View className="flex-row items-center justify-between">
+                    <Text className="text-white font-semibold text-base">Add Location</Text>
+                    <TouchableOpacity
+                      onPress={() => setUseLocation(!useLocation)}
+                      disabled={!canPost}
+                      className={`w-12 h-6 rounded-full ${useLocation ? 'bg-accent' : 'bg-white/20'} items-center justify-center`}
+                    >
+                      <View className={`w-5 h-5 rounded-full bg-white transform ${useLocation ? 'translate-x-3' : '-translate-x-3'}`} />
+                    </TouchableOpacity>
+                  </View>
+                  
+                  {useLocation && (
+                    <View>
+                      {location ? (
+                        <View className="flex-row items-center bg-accent/10 p-3 rounded-2xl">
+                          <Ionicons name="location" size={18} color="#b497f3" />
+                          <Text className="text-accent ml-3 font-medium">{location}</Text>
+                        </View>
+                      ) : (
+                        <TouchableOpacity
+                          onPress={requestLocation}
+                          disabled={!canPost}
+                          className="flex-row items-center bg-white/5 p-3 rounded-2xl"
+                        >
+                          <Ionicons name="location-outline" size={18} color="#ffffff80" />
+                          <Text className="text-white/80 ml-3">Tap to get current location</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  )}
+                </View>
+              </BlurView>
+            </View>
           </ScrollView>
 
           {/* Submit Button */}
-          <View className="px-4 pb-6">
+          <View className="px-6 pb-6">
             <TouchableOpacity
               onPress={submitConfession}
               disabled={!content.trim() || isSubmitting || !canPost}
@@ -418,15 +450,15 @@ export default function CreateConfessionScreen() {
                 colors={canPost && content.trim() ? ['#b497f3', '#8b5cf6'] : ['#ffffff20', '#ffffff10']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                className="py-4 rounded-xl items-center"
+                className="py-4 rounded-2xl"
               >
-                <View className="flex-row items-center">
+                <View className="flex-row items-center justify-center">
                   {isSubmitting ? (
                     <Ionicons name="hourglass-outline" size={20} color="white" />
                   ) : (
                     <Ionicons name="paper-plane" size={20} color="white" />
                   )}
-                  <Text className="text-white font-semibold ml-2">
+                  <Text className="text-white font-semibold ml-3 text-base">
                     {isSubmitting ? 'Sharing...' : canPost ? 'Share Anonymously' : 'Daily Limit Reached'}
                   </Text>
                 </View>

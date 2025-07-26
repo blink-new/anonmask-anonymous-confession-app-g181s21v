@@ -61,14 +61,12 @@ export default function HomeScreen() {
 
   const loadConfessions = async () => {
     try {
-      // Load confessions with reactions count
       const confessionsData = await blink.db.confessions.list({
         orderBy: sortBy === 'latest' ? { created_at: 'desc' } : { created_at: 'desc' },
         limit: 50,
         where: selectedCategory !== 'all' ? { category: selectedCategory } : undefined
       });
 
-      // Load reactions for each confession
       const confessionsWithReactions = await Promise.all(
         confessionsData.map(async (confession: any) => {
           const reactions = await blink.db.confession_reactions.list({
@@ -102,7 +100,6 @@ export default function HomeScreen() {
     if (!user) return;
 
     try {
-      // Check if user already reacted with this type
       const existingReaction = await blink.db.confession_reactions.list({
         where: { 
           confession_id: confessionId, 
@@ -112,10 +109,8 @@ export default function HomeScreen() {
       });
 
       if (existingReaction.length > 0) {
-        // Remove reaction
         await blink.db.confession_reactions.delete(existingReaction[0].id);
       } else {
-        // Remove any existing reaction from this user for this confession
         const allUserReactions = await blink.db.confession_reactions.list({
           where: { confession_id: confessionId, user_id: user.id }
         });
@@ -124,7 +119,6 @@ export default function HomeScreen() {
           await blink.db.confession_reactions.delete(reaction.id);
         }
 
-        // Add new reaction
         await blink.db.confession_reactions.create({
           id: `reaction_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           confession_id: confessionId,
@@ -133,7 +127,6 @@ export default function HomeScreen() {
         });
       }
 
-      // Reload confessions to update counts
       loadConfessions();
     } catch (error) {
       console.error('Error handling reaction:', error);
@@ -162,10 +155,17 @@ export default function HomeScreen() {
     return (
       <View className="flex-1 bg-primary">
         <BubbleBackground />
-        <SafeAreaView className="flex-1 items-center justify-center">
-          <BlurView intensity={20} tint="dark" className="p-6 rounded-2xl glass-card">
-            <Text className="text-white text-lg">Loading AnonMask...</Text>
-          </BlurView>
+        <SafeAreaView className="flex-1">
+          <View className="flex-1 items-center justify-center px-6">
+            <BlurView intensity={20} tint="dark" className="glass-card p-8 rounded-3xl">
+              <View className="items-center">
+                <View className="w-16 h-16 rounded-full bg-accent/20 items-center justify-center mb-4">
+                  <Text className="text-3xl">🎭</Text>
+                </View>
+                <Text className="text-white text-lg font-medium">Loading AnonMask...</Text>
+              </View>
+            </BlurView>
+          </View>
         </SafeAreaView>
       </View>
     );
@@ -175,41 +175,49 @@ export default function HomeScreen() {
     return (
       <View className="flex-1 bg-primary">
         <BubbleBackground />
-        <SafeAreaView className="flex-1 items-center justify-center px-6">
-          <BlurView intensity={25} tint="dark" className="p-8 rounded-3xl glass-card w-full max-w-sm">
-            <View className="items-center mb-6">
-              <View className="w-20 h-20 rounded-full bg-accent/20 items-center justify-center mb-4">
-                <Text className="text-4xl">🎭</Text>
-              </View>
-              <Text className="text-white text-2xl font-bold mb-2">Welcome to AnonMask</Text>
-              <Text className="text-white/70 text-center text-sm leading-5">
-                Share your secrets anonymously. Your identity is never revealed. Even we can't trace it.
-              </Text>
-            </View>
-            
-            <TouchableOpacity
-              onPress={() => blink.auth.login()}
-              className="w-full mb-3"
-            >
-              <LinearGradient
-                colors={['#b497f3', '#8b5cf6']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                className="py-4 rounded-xl items-center"
-              >
-                <View className="flex-row items-center">
-                  <Ionicons name="logo-google" size={20} color="white" />
-                  <Text className="text-white font-semibold ml-2">Continue with Google</Text>
+        <SafeAreaView className="flex-1">
+          <View className="flex-1 items-center justify-center px-6">
+            <BlurView intensity={25} tint="dark" className="glass-card p-8 rounded-3xl w-full max-w-sm">
+              <View className="items-center space-y-6">
+                <View className="items-center space-y-4">
+                  <View className="w-20 h-20 rounded-full bg-accent/20 items-center justify-center">
+                    <Text className="text-4xl">🎭</Text>
+                  </View>
+                  <View className="items-center space-y-2">
+                    <Text className="text-white text-2xl font-bold">Welcome to AnonMask</Text>
+                    <Text className="text-white/70 text-center text-sm leading-6">
+                      Share your secrets anonymously. Your identity is never revealed. Even we can't trace it.
+                    </Text>
+                  </View>
                 </View>
-              </LinearGradient>
-            </TouchableOpacity>
-            
-            <View className="bg-white/5 p-3 rounded-xl">
-              <Text className="text-white/60 text-xs text-center">
-                🔒 Your identity is protected by advanced encryption
-              </Text>
-            </View>
-          </BlurView>
+                
+                <View className="w-full space-y-4">
+                  <TouchableOpacity
+                    onPress={() => blink.auth.login()}
+                    className="w-full"
+                  >
+                    <LinearGradient
+                      colors={['#b497f3', '#8b5cf6']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      className="py-4 rounded-xl"
+                    >
+                      <View className="flex-row items-center justify-center">
+                        <Ionicons name="logo-google" size={20} color="white" />
+                        <Text className="text-white font-semibold ml-3">Continue with Google</Text>
+                      </View>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                  
+                  <View className="bg-white/5 p-4 rounded-xl">
+                    <Text className="text-white/60 text-xs text-center leading-5">
+                      🔒 Your identity is protected by advanced encryption
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </BlurView>
+          </View>
         </SafeAreaView>
       </View>
     );
@@ -221,30 +229,38 @@ export default function HomeScreen() {
       
       <SafeAreaView className="flex-1">
         {/* Header */}
-        <BlurView intensity={20} tint="dark" className="glass border-b border-white/10">
-          <View className="flex-row items-center justify-between px-4 py-3">
-            <View className="flex-row items-center">
-              <View className="w-10 h-10 rounded-full bg-accent/20 items-center justify-center mr-3">
-                <Text className="text-2xl">🎭</Text>
+        <View className="border-b border-white/10">
+          <BlurView intensity={20} tint="dark" className="glass">
+            <View className="flex-row items-center justify-between px-6 py-4">
+              <View className="flex-row items-center">
+                <View className="w-10 h-10 rounded-full bg-accent/20 items-center justify-center mr-3">
+                  <Text className="text-2xl">🎭</Text>
+                </View>
+                <Text className="text-white text-xl font-bold">AnonMask</Text>
               </View>
-              <Text className="text-white text-xl font-bold">AnonMask</Text>
+              
+              <View className="flex-row items-center space-x-4">
+                <TouchableOpacity 
+                  onPress={() => router.push('/inbox')} 
+                  className="w-10 h-10 items-center justify-center"
+                >
+                  <Ionicons name="mail-outline" size={24} color="#ffffff80" />
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  onPress={() => router.push('/settings')}
+                  className="w-10 h-10 items-center justify-center"
+                >
+                  <Ionicons name="settings-outline" size={24} color="#ffffff80" />
+                </TouchableOpacity>
+              </View>
             </View>
-            
-            <View className="flex-row items-center">
-              <TouchableOpacity onPress={() => router.push('/inbox')} className="mr-4">
-                <Ionicons name="mail-outline" size={24} color="#ffffff80" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => router.push('/settings')}>
-                <Ionicons name="settings-outline" size={24} color="#ffffff80" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </BlurView>
+          </BlurView>
+        </View>
 
         {/* Sort Toggle */}
-        <View className="px-4 py-3">
+        <View className="px-6 py-4">
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View className="flex-row">
+            <View className="flex-row space-x-3">
               {[
                 { key: 'latest', label: 'Latest', icon: 'time-outline' },
                 { key: 'popular', label: 'Popular', icon: 'flame-outline' },
@@ -253,27 +269,28 @@ export default function HomeScreen() {
                 <TouchableOpacity
                   key={sort.key}
                   onPress={() => setSortBy(sort.key as any)}
-                  className="mr-3"
                 >
                   <BlurView
                     intensity={15}
                     tint="dark"
-                    className={`px-4 py-2 rounded-full flex-row items-center ${
+                    className={`px-4 py-3 rounded-full ${
                       sortBy === sort.key ? 'glass-button' : 'glass'
                     }`}
                   >
-                    <Ionicons
-                      name={sort.icon as any}
-                      size={16}
-                      color={sortBy === sort.key ? '#b497f3' : '#ffffff80'}
-                    />
-                    <Text
-                      className={`ml-2 text-sm font-medium ${
-                        sortBy === sort.key ? 'text-accent' : 'text-white/80'
-                      }`}
-                    >
-                      {sort.label}
-                    </Text>
+                    <View className="flex-row items-center">
+                      <Ionicons
+                        name={sort.icon as any}
+                        size={16}
+                        color={sortBy === sort.key ? '#b497f3' : '#ffffff80'}
+                      />
+                      <Text
+                        className={`ml-2 text-sm font-medium ${
+                          sortBy === sort.key ? 'text-accent' : 'text-white/80'
+                        }`}
+                      >
+                        {sort.label}
+                      </Text>
+                    </View>
                   </BlurView>
                 </TouchableOpacity>
               ))}
@@ -300,24 +317,32 @@ export default function HomeScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#b497f3" />
           }
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 120 }}
+          contentContainerStyle={{ paddingBottom: 140 }}
         >
           {confessions.length === 0 ? (
-            <View className="items-center justify-center py-20">
-              <BlurView intensity={20} tint="dark" className="p-6 rounded-2xl glass-card mx-4">
-                <Text className="text-white/60 text-center">
-                  No confessions yet. Be the first to share anonymously! 🎭
-                </Text>
+            <View className="flex-1 items-center justify-center py-20 px-6">
+              <BlurView intensity={20} tint="dark" className="glass-card p-8 rounded-3xl w-full max-w-sm">
+                <View className="items-center space-y-4">
+                  <Text className="text-6xl">🎭</Text>
+                  <View className="items-center space-y-2">
+                    <Text className="text-white font-semibold text-lg">No confessions yet</Text>
+                    <Text className="text-white/60 text-center text-sm leading-6">
+                      Be the first to share anonymously! Your story matters.
+                    </Text>
+                  </View>
+                </View>
               </BlurView>
             </View>
           ) : (
-            confessions.map((confession) => (
-              <ConfessionCard
-                key={confession.id}
-                confession={confession}
-                onReact={handleReaction}
-              />
-            ))
+            <View className="space-y-4">
+              {confessions.map((confession) => (
+                <ConfessionCard
+                  key={confession.id}
+                  confession={confession}
+                  onReact={handleReaction}
+                />
+              ))}
+            </View>
           )}
         </ScrollView>
       </SafeAreaView>

@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Pressable } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
-import { blink } from '../lib/blink';
 
 interface Confession {
   id: string;
@@ -70,52 +69,52 @@ const ConfessionCard: React.FC<ConfessionCardProps> = ({ confession, onReact }) 
   };
 
   return (
-    <View className="mx-4 mb-4">
-      <BlurView intensity={20} tint="dark" className="rounded-2xl overflow-hidden glass-card">
-        <View className="p-4">
+    <View className="mx-6 mb-4">
+      <BlurView intensity={20} tint="dark" className="glass-card rounded-3xl overflow-hidden">
+        <View className="p-6">
           {/* Header */}
-          <View className="flex-row items-center justify-between mb-3">
-            <View className="flex-row items-center">
-              <View className="w-10 h-10 rounded-full bg-accent/20 items-center justify-center mr-3">
-                <Text className="text-accent font-medium text-lg">{confession.anonymous_avatar}</Text>
+          <View className="flex-row items-center justify-between mb-4">
+            <View className="flex-row items-center flex-1">
+              <View className="w-12 h-12 rounded-full bg-accent/20 items-center justify-center mr-4">
+                <Text className="text-accent font-medium text-xl">{confession.anonymous_avatar}</Text>
               </View>
-              <View>
-                <Text className="text-white font-medium">{confession.anonymous_name}</Text>
-                <Text className="text-white/60 text-xs">{formatTimeAgo(confession.created_at)}</Text>
+              <View className="flex-1">
+                <Text className="text-white font-semibold text-base">{confession.anonymous_name}</Text>
+                <Text className="text-white/60 text-sm">{formatTimeAgo(confession.created_at)}</Text>
               </View>
             </View>
             
             {/* Badges */}
-            <View className="flex-row">
+            <View className="flex-row space-x-2">
               {confession.is_confession_of_day && (
-                <View className="bg-accent/20 px-2 py-1 rounded-full mr-2">
-                  <Text className="text-accent text-xs font-medium">✨ Today</Text>
+                <View className="bg-accent/20 px-3 py-1 rounded-full">
+                  <Text className="text-accent text-xs font-semibold">✨ Today</Text>
                 </View>
               )}
               {confession.is_featured && (
-                <View className="bg-yellow-500/20 px-2 py-1 rounded-full">
-                  <Text className="text-yellow-400 text-xs font-medium">🔥 Hot</Text>
+                <View className="bg-yellow-500/20 px-3 py-1 rounded-full">
+                  <Text className="text-yellow-400 text-xs font-semibold">🔥 Hot</Text>
                 </View>
               )}
             </View>
           </View>
 
           {/* Category */}
-          <View className="mb-3">
-            <View className="bg-accent/10 px-3 py-1 rounded-full self-start">
-              <Text className="text-accent text-xs font-medium capitalize">{confession.category}</Text>
+          <View className="mb-4">
+            <View className="bg-accent/10 px-3 py-2 rounded-full self-start">
+              <Text className="text-accent text-sm font-medium capitalize">{confession.category}</Text>
             </View>
           </View>
 
           {/* Content */}
-          <Text className="text-white text-base leading-6 mb-4">{confession.content}</Text>
+          <Text className="text-white text-base leading-7 mb-5">{confession.content}</Text>
 
           {/* Tags */}
           {confession.tags && (
             <View className="flex-row flex-wrap mb-4">
               {JSON.parse(confession.tags).map((tag: string, index: number) => (
-                <View key={index} className="bg-white/5 px-2 py-1 rounded-full mr-2 mb-1">
-                  <Text className="text-white/70 text-xs">#{tag}</Text>
+                <View key={index} className="bg-white/5 px-3 py-1 rounded-full mr-2 mb-2">
+                  <Text className="text-white/70 text-sm">#{tag}</Text>
                 </View>
               ))}
             </View>
@@ -123,35 +122,37 @@ const ConfessionCard: React.FC<ConfessionCardProps> = ({ confession, onReact }) 
 
           {/* Location */}
           {confession.location && (
-            <View className="flex-row items-center mb-4">
-              <Ionicons name="location-outline" size={14} color="#b497f3" />
-              <Text className="text-accent text-xs ml-1">{confession.location}</Text>
+            <View className="flex-row items-center mb-5">
+              <Ionicons name="location-outline" size={16} color="#b497f3" />
+              <Text className="text-accent text-sm ml-2">{confession.location}</Text>
             </View>
           )}
 
           {/* Reactions */}
-          <View className="flex-row justify-between items-center pt-3 border-t border-white/10">
-            {['heart', 'cry', 'laugh', 'relate'].map((reactionType) => (
-              <TouchableOpacity
-                key={reactionType}
-                onPress={() => handleReaction(reactionType)}
-                disabled={isReacting}
-                className={`flex-row items-center px-3 py-2 rounded-full ${
-                  confession.user_reaction === reactionType ? 'bg-accent/20' : 'bg-white/5'
-                }`}
-              >
-                <Ionicons
-                  name={getReactionIcon(reactionType) as any}
-                  size={16}
-                  color={confession.user_reaction === reactionType ? getReactionColor(reactionType) : '#ffffff60'}
-                />
-                <Text className={`ml-1 text-xs ${
-                  confession.user_reaction === reactionType ? 'text-white' : 'text-white/60'
-                }`}>
-                  {confession.reactions?.[reactionType as keyof typeof confession.reactions] || 0}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          <View className="border-t border-white/10 pt-4">
+            <View className="flex-row justify-between">
+              {['heart', 'cry', 'laugh', 'relate'].map((reactionType) => (
+                <TouchableOpacity
+                  key={reactionType}
+                  onPress={() => handleReaction(reactionType)}
+                  disabled={isReacting}
+                  className={`flex-1 flex-row items-center justify-center py-3 mx-1 rounded-2xl ${
+                    confession.user_reaction === reactionType ? 'bg-accent/20' : 'bg-white/5'
+                  }`}
+                >
+                  <Ionicons
+                    name={getReactionIcon(reactionType) as any}
+                    size={18}
+                    color={confession.user_reaction === reactionType ? getReactionColor(reactionType) : '#ffffff60'}
+                  />
+                  <Text className={`ml-2 text-sm font-medium ${
+                    confession.user_reaction === reactionType ? 'text-white' : 'text-white/60'
+                  }`}>
+                    {confession.reactions?.[reactionType as keyof typeof confession.reactions] || 0}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
         </View>
       </BlurView>

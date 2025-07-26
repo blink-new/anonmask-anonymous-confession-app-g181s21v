@@ -16,25 +16,39 @@
   --ring: 180 151 243;
 }
 
-body {
-  background: linear-gradient(135deg, #1e1e2f 0%, #2a2a3e 50%, #1e1e2f 100%);
-  min-height: 100vh;
-  font-family: 'Inter', sans-serif;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+}
+
+body {
+  background: linear-gradient(135deg, #1e1e2f 0%, #2a2a3e 50%, #1e1e2f 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: white;
+  line-height: 1.5;
 }
 
 /* Glassmorphism utilities */
 .glass {
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .glass-card {
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
   border: 1px solid rgba(180, 151, 243, 0.2);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
@@ -42,55 +56,64 @@ body {
 .glass-button {
   background: rgba(180, 151, 243, 0.2);
   backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   border: 1px solid rgba(180, 151, 243, 0.3);
 }
 
-.glass-button:hover {
+.glass-button:active {
   background: rgba(180, 151, 243, 0.3);
   border: 1px solid rgba(180, 151, 243, 0.5);
+  transform: scale(0.98);
 }
 
 /* Bubble animation */
 @keyframes float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  33% { transform: translateY(-20px) rotate(120deg); }
-  66% { transform: translateY(10px) rotate(240deg); }
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg); 
+    opacity: 0.6;
+  }
+  33% { 
+    transform: translateY(-30px) rotate(120deg); 
+    opacity: 0.8;
+  }
+  66% { 
+    transform: translateY(15px) rotate(240deg); 
+    opacity: 0.4;
+  }
 }
 
 .bubble {
-  animation: float 6s ease-in-out infinite;
+  animation: float 8s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
-.bubble:nth-child(2) { animation-delay: -2s; }
-.bubble:nth-child(3) { animation-delay: -4s; }
+.bubble:nth-child(2) { animation-delay: -2.5s; }
+.bubble:nth-child(3) { animation-delay: -5s; }
+.bubble:nth-child(4) { animation-delay: -7.5s; }
 
 /* Smooth transitions */
-* {
+.transition-all {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-sizing: border-box;
 }
 
-/* Fix layout alignment */
+/* Layout fixes */
+.safe-area {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Container with proper spacing */
 .container {
+  width: 100%;
   max-width: 100%;
   margin: 0 auto;
-  padding: 0 16px;
+  padding-left: 16px;
+  padding-right: 16px;
 }
 
-/* Ensure proper spacing */
-.space-y-2 > * + * {
-  margin-top: 8px;
-}
-
-.space-y-3 > * + * {
-  margin-top: 12px;
-}
-
-.space-y-4 > * + * {
-  margin-top: 16px;
-}
-
-/* Fix flex alignment issues */
+/* Flex utilities with proper alignment */
 .flex-center {
   display: flex;
   align-items: center;
@@ -103,15 +126,130 @@ body {
   justify-content: space-between;
 }
 
-/* Ensure proper text alignment */
+.flex-start {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+/* Text alignment fixes */
 .text-center {
   text-align: center;
 }
 
-/* Fix button alignment */
+.text-left {
+  text-align: left;
+}
+
+/* Button alignment */
 .btn-center {
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
+  min-height: 48px;
+}
+
+/* Card spacing */
+.card-spacing {
+  margin-bottom: 16px;
+}
+
+.card-spacing:last-child {
+  margin-bottom: 0;
+}
+
+/* Input styling */
+.input-field {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: white;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: rgba(180, 151, 243, 0.5);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.input-field::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Scrollview content padding */
+.scroll-content {
+  padding-bottom: 120px; /* Space for bottom nav */
+}
+
+/* Fix for React Native Web text input */
+input, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+}
+
+/* Loading states */
+.loading-shimmer {
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0.05) 0%, 
+    rgba(255, 255, 255, 0.1) 50%, 
+    rgba(255, 255, 255, 0.05) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Fix for modal/overlay positioning */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Ensure proper spacing between elements */
+.space-y-1 > * + * { margin-top: 4px; }
+.space-y-2 > * + * { margin-top: 8px; }
+.space-y-3 > * + * { margin-top: 12px; }
+.space-y-4 > * + * { margin-top: 16px; }
+.space-y-6 > * + * { margin-top: 24px; }
+
+.space-x-1 > * + * { margin-left: 4px; }
+.space-x-2 > * + * { margin-left: 8px; }
+.space-x-3 > * + * { margin-left: 12px; }
+.space-x-4 > * + * { margin-left: 16px; }
+
+/* Responsive text sizes */
+.text-xs { font-size: 12px; line-height: 16px; }
+.text-sm { font-size: 14px; line-height: 20px; }
+.text-base { font-size: 16px; line-height: 24px; }
+.text-lg { font-size: 18px; line-height: 28px; }
+.text-xl { font-size: 20px; line-height: 28px; }
+.text-2xl { font-size: 24px; line-height: 32px; }
+
+/* Fix for touch targets */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
